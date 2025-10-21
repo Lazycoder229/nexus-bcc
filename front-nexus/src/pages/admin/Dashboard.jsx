@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                       <th
                         key={key}
                         onClick={() => handleSort(key)}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b cursor-pointer"
+                        className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase border-b cursor-pointer"
                       >
                         <div className="flex items-center gap-1">
                           {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -425,14 +425,18 @@ export default function AdminDashboard() {
                 {paginate(sortData(enrollmentStats), enrollPage).map(
                   (dept, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">{dept.department}</td>
-                      <td className="px-6 py-4">{dept.total}</td>
-                      <td className="px-6 py-4 text-green-700">
+                      <td className="px-2 py-1.5 font-medium text-gray-700">
+                        {dept.department}
+                      </td>
+                      <td className="px-2 py-1.5 text-gray-600">
+                        {dept.total}
+                      </td>
+                      <td className="px-2 py-1.5 text-green-700">
                         {dept.completed}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-2 py-1.5">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${
+                          className={`px-2 py-0.5 rounded-full text-xs ${
                             dept.pending > 15
                               ? "bg-red-100 text-red-800"
                               : dept.pending > 5
@@ -478,7 +482,7 @@ export default function AdminDashboard() {
                   <div className="flex justify-between">
                     <span className="font-semibold">Pending:</span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
+                      className={`px-2 py-0.5 rounded-full text-xs ${
                         dept.pending > 15
                           ? "bg-red-100 text-red-800"
                           : dept.pending > 5
@@ -500,6 +504,7 @@ export default function AdminDashboard() {
           </div>
         </section>
       )}
+
       {/* ---------------------- Performance Tab ---------------------- */}
       {activeTab === "performance" && (
         <section>
@@ -658,7 +663,6 @@ export default function AdminDashboard() {
           </div>
         </section>
       )}
-
       {/* ---------------------- Alerts Tab ---------------------- */}
       {activeTab === "alerts" && (
         <section>
@@ -674,7 +678,7 @@ export default function AdminDashboard() {
                   {["type", "message", "date"].map((key) => (
                     <th
                       key={key}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b"
+                      className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase border-b"
                     >
                       {key.charAt(0).toUpperCase() + key.slice(1)}
                     </th>
@@ -684,13 +688,16 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-gray-100">
                 {paginate(alerts, alertPage).map((a, idx) => (
                   <tr key={idx} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">{a.type}</td>
-                    <td className="px-6 py-4">{a.message}</td>
-                    <td className="px-6 py-4 text-gray-500">{a.date}</td>
+                    <td className="px-2 py-1.5 font-medium text-gray-700">
+                      {a.type.charAt(0).toUpperCase() + a.type.slice(1)}
+                    </td>
+                    <td className="px-2 py-1.5 text-gray-600">{a.message}</td>
+                    <td className="px-2 py-1.5 text-gray-500">{a.date}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
             <Pagination
               page={alertPage}
               setPage={setAlertPage}

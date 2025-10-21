@@ -61,11 +61,7 @@ const sidebarSections = [
             label: "Curriculum Setup",
             path: "/admin/curriculum",
           },
-          {
-            id: "program-offerings",
-            label: "Program Offerings (Major / Minor)",
-            path: "/admin/programs",
-          },
+
           {
             id: "prereq",
             label: "Prerequisite Setup",

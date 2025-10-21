@@ -9,6 +9,7 @@ import AuditLogs from "./User management/AuditLogs";
 import DataBackupRestore from "./User management/BackUp";
 import DepartmentMngt from "./academics/Department & Course/DepartmentMngt";
 import CourseManagement from "./academics/Department & Course/CourseManagement";
+import PrerequisitesManagement from "./academics/Department & Course/PrerequisiteManagent";
 
 function AdminPage() {
   return (
@@ -23,6 +24,10 @@ function AdminPage() {
         <Route path="/admin/departments" element={<DepartmentMngt />} />
 
         <Route path="/admin/courses/new" element={<CourseManagement />} />
+        <Route
+          path="/admin/prerequisites"
+          element={<PrerequisitesManagement />}
+        />
       </Routes>
     </AdminLayout>
   );

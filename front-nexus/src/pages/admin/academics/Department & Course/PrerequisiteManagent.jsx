@@ -1,3 +1,4 @@
+// src/pages/course/prerequisites/PrerequisitesManagement.js
 import React, { useReducer } from "react";
 import {
   Eye,
@@ -10,15 +11,14 @@ import {
 import { useModal } from "../../../../components/hooks/useModal";
 import DataTable from "../../../../components/table/DataTable";
 import DeleteConfirmationModal from "./modalForm/DeleteConfirmation";
-import { courseReducer, initialState } from "../../reducer/courseReducer";
 import CourseForm from "./courseForm/CourseForm";
 import CourseView from "./courseForm/CourseView";
+import { courseReducer, initialState } from "../../reducer/courseReducer";
 
-export default function CourseManagement() {
+export default function PrerequisitesManagement() {
   const [state, dispatch] = useReducer(courseReducer, initialState);
   const { openModal, closeModal } = useModal();
 
-  // Filters for DataTable
   // --- Filters ---
   const filters = [
     {
@@ -28,20 +28,19 @@ export default function CourseManagement() {
     },
   ];
 
-  // --- CRUD + View Actions ---
-  const handleAdd = () => {
+  // --- CRUD Actions ---
+  const handleAdd = () =>
     openModal(
       <CourseForm
         mode="add"
         dispatch={dispatch}
         closeModal={closeModal}
         departments={state.departments}
-        prerequisites={state.courses}
+        courses={state.courses} // for prerequisites
       />
     );
-  };
 
-  const handleEdit = (course) => {
+  const handleEdit = (course) =>
     openModal(
       <CourseForm
         mode="edit"
@@ -49,27 +48,21 @@ export default function CourseManagement() {
         dispatch={dispatch}
         closeModal={closeModal}
         departments={state.departments}
-        prerequisites={state.courses.filter((c) => c.id !== course.id)}
+        courses={state.courses.filter((c) => c.id !== course.id)}
       />
     );
-  };
 
-  const handleView = (course) => {
-    dispatch({ type: "VIEW_COURSE", payload: course });
+  const handleView = (course) =>
     openModal(
       <CourseView
         course={course}
         departments={state.departments}
         prerequisites={state.courses}
-        closeModal={() => {
-          dispatch({ type: "CLEAR_SELECTED" });
-          closeModal();
-        }}
+        closeModal={closeModal}
       />
     );
-  };
 
-  const handleDelete = (course) => {
+  const handleDelete = (course) =>
     openModal(
       <DeleteConfirmationModal
         itemName={course.title}
@@ -80,13 +73,12 @@ export default function CourseManagement() {
         onCancel={closeModal}
       />
     );
-  };
 
   // --- Table columns ---
   const columns = [
-    { key: "type", label: "Type" },
     { key: "code", label: "Code" },
-    { key: "title", label: "Program / Course" },
+    { key: "title", label: "Title" },
+    { key: "type", label: "Type" },
     {
       key: "departmentId",
       label: "Department",
@@ -94,28 +86,15 @@ export default function CourseManagement() {
         state.departments.find((d) => d.id === value)?.name || "—",
     },
     {
-      key: "prerequisitesText",
+      key: "prerequisites",
       label: "Prerequisites",
-      render: (_, row) => {
-        const prerequisites = (row.prerequisitesText || "")
-          .split("\n")
-          .filter(Boolean);
-
-        if (prerequisites.length === 0) return "nkjkj";
-        if (prerequisites.length === 1) return prerequisites[0];
-
-        // Show first prereq + N more
-        return (
-          <span>
-            {prerequisites[0]}{" "}
-            <span className="text-gray-500 text-xs">
-              +{prerequisites.length - 1}
-            </span>
-          </span>
-        );
-      },
+      render: (_, row) =>
+        row.prerequisites && row.prerequisites.length > 0
+          ? row.prerequisites.length === 1
+            ? row.prerequisites[0]
+            : `${row.prerequisites[0]} +${row.prerequisites.length - 1}`
+          : "-",
     },
-    { key: "units", label: "Units" },
     {
       key: "status",
       label: "Status",
@@ -162,21 +141,18 @@ export default function CourseManagement() {
   // --- KPI Summary cards ---
   const kpis = [
     {
-      label: "Total Programs & Courses",
+      label: "Total Courses",
       value: state.courses.length,
       icon: <GraduationCap className="text-blue-500" size={22} />,
     },
     {
-      label: "Active Programs & Courses",
+      label: "Active Courses",
       value: state.courses.filter((c) => c.status === "Active").length,
       icon: <Activity className="text-green-500" size={22} />,
     },
     {
-      label: "Total Students",
-      value: state.courses.reduce(
-        (sum, c) => sum + (parseInt(c.students) || 0),
-        0
-      ),
+      label: "Inactive Courses",
+      value: state.courses.filter((c) => c.status === "Inactive").length,
       icon: <Users className="text-indigo-500" size={22} />,
     },
   ];
@@ -184,20 +160,20 @@ export default function CourseManagement() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-6">
       <h1 className="text-2xl font-semibold text-gray-800">
-        Programs & Course Offers
+        Prerequisites Management
       </h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {kpis.map((kpi, i) => (
+        {kpis.map((k, i) => (
           <div
             key={i}
             className="bg-white shadow-sm border border-gray-200 rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition"
           >
-            <div className="bg-gray-50 p-2 rounded-lg">{kpi.icon}</div>
+            <div className="bg-gray-50 p-2 rounded-lg">{k.icon}</div>
             <div>
-              <p className="text-sm text-gray-500">{kpi.label}</p>
-              <p className="text-lg font-semibold text-gray-800">{kpi.value}</p>
+              <p className="text-sm text-gray-500">{k.label}</p>
+              <p className="text-lg font-semibold text-gray-800">{k.value}</p>
             </div>
           </div>
         ))}
@@ -207,10 +183,10 @@ export default function CourseManagement() {
       <DataTable
         columns={columns}
         data={state.courses}
-        filters={filters} // only array of filter definitions
+        filters={filters}
         itemsPerPage={10}
         onAddItem={handleAdd}
-        addButtonLabel="Add Program / Course"
+        addButtonLabel="Add Course"
       />
     </div>
   );

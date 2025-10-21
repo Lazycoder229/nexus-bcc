@@ -17,21 +17,27 @@ export default function DataTable({
     filters ? Object.fromEntries(filters.map((f) => [f.key, ""])) : {}
   );
   const [currentPage, setCurrentPage] = useState(1);
-
   // Filtered Data
   const filteredData = useMemo(() => {
     return data.filter((row) => {
+      // 1️⃣ Search filter: check if any row value matches search text
       const matchesSearch = Object.values(row)
+        .map((v) => (v !== null && v !== undefined ? v.toString() : ""))
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase());
 
+      // 2️⃣ Dropdown filters: only filter if a value is selected and not "All"
       const matchesFilters = filters
-        ? filters.every(
-            (f) =>
-              !filterValues[f.key] ||
-              row[f.key].toString() === filterValues[f.key]
-          )
+        ? filters.every((f) => {
+            const filterVal = filterValues[f.key];
+            if (!filterVal || filterVal === "All") return true;
+
+            // Convert row value to string safely
+            const rowVal =
+              row[f.key] !== undefined ? row[f.key].toString() : "";
+            return rowVal === filterVal.toString();
+          })
         : true;
 
       return matchesSearch && matchesFilters;
@@ -44,7 +50,7 @@ export default function DataTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentItems = filteredData.slice(startIndex, endIndex);
 
-  // Export to Excel
+  // Export functions
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredData.map((row) => {
@@ -59,29 +65,22 @@ export default function DataTable({
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
     XLSX.writeFile(workbook, "data.xlsx");
   };
+
   const exportToPDF = () => {
     const doc = new jsPDF();
-
     const tableColumn = columns.map((c) => c.label);
     const tableRows = filteredData.map((row) =>
-      columns.map((c) => {
-        if (c.render) {
-          if (c.key === "status") return row[c.key]; // plain text
-          return row[c.key]; // fallback
-        }
-        return row[c.key];
-      })
+      columns.map((c) => (c.render ? row[c.key] : row[c.key]))
     );
-
-    autoTable(doc, { head: [tableColumn], body: tableRows }); // pass doc as first argument
+    autoTable(doc, { head: [tableColumn], body: tableRows });
     doc.save("data.pdf");
   };
+
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       {/* Search, Filters, Export, Add Button */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-3 border-b border-gray-200">
-        {/* Left: Search + Filters */}
-        <div className="flex gap-2 items-center w-full md:w-auto">
+        <div className="flex gap-2 items-center w-full md:w-auto flex-wrap">
           <input
             type="search"
             placeholder="Search..."
@@ -116,8 +115,7 @@ export default function DataTable({
             ))}
         </div>
 
-        {/* Right: Export + Add Button */}
-        <div className="flex gap-2 mt-2 md:mt-0 items-center mb-2">
+        <div className="flex gap-2 mt-2 md:mt-0 items-center mb-2 flex-wrap">
           <button
             onClick={exportToExcel}
             className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 text-sm"
@@ -144,10 +142,10 @@ export default function DataTable({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table for md+ screens */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100 ">
+          <thead className="bg-gray-100">
             <tr>
               {columns.map((col, idx) => (
                 <th
@@ -186,6 +184,32 @@ export default function DataTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Card layout for small screens */}
+      <div className="md:hidden grid grid-cols-1 gap-3 p-2">
+        {currentItems.map((row, idx) => (
+          <div
+            key={idx}
+            className="bg-white shadow-sm border rounded-lg p-3 space-y-2"
+          >
+            {columns.map((col) => {
+              if (col.key === "actions") return null; // actions rendered separately
+              return (
+                <div key={col.key} className="flex justify-between">
+                  <span className="font-medium text-gray-500">{col.label}</span>
+                  <span className="text-gray-800 text-sm">
+                    {col.render ? col.render(row[col.key], row) : row[col.key]}
+                  </span>
+                </div>
+              );
+            })}
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-1">
+              {columns.find((c) => c.key === "actions")?.render?.(null, row)}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Pagination */}
